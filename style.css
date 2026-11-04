@@ -845,9 +845,6 @@ body.gate #app { min-height: 100dvh; display: flex; align-items: center; justify
   .gmbox .stats > div { padding: 0 6px; }
   .gmbox .stats .v { font-size: 20px; }
   /* round 2 */
-  .kpis:has(> div:nth-child(4)) { grid-template-columns: 1fr 1fr; }
-  .kpis:has(> div:nth-child(4)) > div:nth-child(2n) { border-right: 0; }
-  .kpis:has(> div:nth-child(4)) > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
   .bar > .seg { width: 100%; }
   .bar > .seg button { flex: 1; }
   .rb .bar > .seg { width: auto; flex: 1; }
@@ -897,3 +894,35 @@ body.gate #app { min-height: 100dvh; display: flex; align-items: center; justify
 .slc { display: inline-flex; align-items: center; justify-content: center; }
 .slc svg { width: 14px; height: 14px; }
 .slpill i svg { width: 12px; height: 12px; display: block; }
+/* phones, round 3: give everything room to breathe */
+@media (max-width: 640px) {
+  /* KPI boxes: counts share the top row, grade counts get a full row underneath */
+  .kpis { display: flex; flex-wrap: wrap; }
+  .kpis > div { flex: 1 1 0; min-width: 0; }
+  .kpis > div:has(.gl) { flex-basis: 100%; display: flex; align-items: center; justify-content: space-between; border-right: 0; border-top: 1px solid var(--line); padding: 10px 12px; }
+  .kpis > div:nth-last-child(2) { border-right: 0; }
+  .kpis .gl { gap: 14px; }
+  /* filters: market tabs full width, then sort + plays-only on their own row */
+  .ctl { flex-wrap: wrap; width: 100%; gap: 8px 12px; padding: 0; }
+  .ctl > #mk { width: 100%; } .ctl > #mk button { flex: 1; }
+  .ctl .sw { white-space: nowrap; font-size: 12.5px; }
+  .ctl > #so { margin-left: auto; }
+  /* team rows: record never wraps, long names shorten instead */
+  .tl { gap: 7px; min-width: 0; }
+  .tl .tn { min-width: 0; flex: 0 1 auto; }
+  .tl .rec, .tl .rk, .tl .fav { flex: none; white-space: nowrap; }
+  /* the pick can use two lines instead of getting cut off */
+  .bet b { white-space: normal; overflow: visible; font-size: 14px; line-height: 1.15; }
+  /* game header: long names wrap under the logo, scores leave them room */
+  .gmbox .gc, .gmbox.game .gc { grid-template-columns: minmax(70px, 1fr) auto minmax(70px, 1fr); }
+  .gmbox .gct b, .gmbox.game .gct b { white-space: normal; font-size: 13px; overflow-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .gmbox .gct span { max-width: 100%; }
+  .gmbox .gcm { gap: 8px; } .gmbox .gcc { min-width: 0; }
+  .gmbox .gcs small { font-size: 10.5px; white-space: nowrap; }
+  /* matchup + form tables: fit the screen, team names wrap */
+  .gmbox .cmp { table-layout: fixed; width: 100%; }
+  .gmbox .cmp th, .gmbox .cmp td { white-space: normal; overflow-wrap: break-word; }
+  .gmbox .cmp td, .gmbox .cmp th { padding-left: 10px; padding-right: 10px; }
+  .gmbox .cmp td.c, .gmbox .cmp th.c { width: 34%; font-size: 12px; }
+  .gmbox .cmp th:not(.c) { font-size: 10.5px; line-height: 1.25; }
+}
