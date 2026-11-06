@@ -900,7 +900,7 @@ body.gate #app { min-height: 100dvh; display: flex; align-items: center; justify
   .kpis { display: flex; flex-wrap: wrap; }
   .kpis > div { flex: 1 1 0; min-width: 0; }
   .kpis > div:has(.gl) { flex-basis: 100%; display: flex; align-items: center; justify-content: space-between; border-right: 0; border-top: 1px solid var(--line); padding: 10px 12px; }
-  .kpis > div:nth-last-child(2) { border-right: 0; }
+  .kpis:has(.gl) > div:nth-last-child(2) { border-right: 0; }
   .kpis .gl { gap: 14px; }
   /* filters: market tabs full width, then sort + plays-only on their own row */
   .ctl { flex-wrap: wrap; width: 100%; gap: 8px 12px; padding: 0; }
@@ -925,4 +925,16 @@ body.gate #app { min-height: 100dvh; display: flex; align-items: center; justify
   .gmbox .cmp td, .gmbox .cmp th { padding-left: 10px; padding-right: 10px; }
   .gmbox .cmp td.c, .gmbox .cmp th.c { width: 34%; font-size: 12px; }
   .gmbox .cmp th:not(.c) { font-size: 10.5px; line-height: 1.25; }
+}
+/* twitter plays */
+.led.tw .twg { display: none; margin-top: 2px; font-size: 12px; color: var(--mute); }
+.led.tw .twn { margin-top: 3px; font-size: 12px; color: var(--mute); font-weight: 500; white-space: normal; }
+.led .mut { color: var(--mute); font-weight: 500; }
+@media (max-width: 640px) {
+  nav .nx { display: none; }
+  .led.tw .twg { display: block; }
+  .led.tw th:nth-child(3), .led.tw td:nth-child(3), .led.tw th:nth-child(4), .led.tw td:nth-child(4), .led.tw th:nth-child(7), .led.tw td:nth-child(7) { display: none; }
+  .led.tw td:first-child { white-space: normal; }
+  nav { gap: 0; } nav a { padding: 0 8px; font-size: 13px; }
+  .hdr-in { gap: 8px; }
 }

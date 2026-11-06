@@ -985,6 +985,40 @@
   }
 
 
+  // ================================================================ twitter plays (hand-picked, added daily)
+  function viewTwitter() {
+    const gradeIt = (r, hs, as) => { const mar = hs - as, tot = hs + as;
+      const v = r.market === 'spread' ? (r.side === 'home' ? mar + r.line : -mar + r.line) : r.market === 'total' ? (r.side === 'over' ? tot - r.line : r.line - tot) : (r.side === 'home' ? mar : -mar);
+      return v > 0 ? 'W' : v < 0 ? 'L' : 'P'; };
+    const rows = (D.twitter || []).map((t) => {
+      const g = D.games.find((x) => x.event_id === t.event_id), r = { ...t };
+      if (g) { r.state = g.state; r.detail = g.detail; if (r.away_score == null && g.away_score != null) { r.away_score = g.away_score; r.home_score = g.home_score; } if (!r.start) r.start = g.start; }
+      if (!r.result && g && isFinal(g)) r.result = gradeIt(r, g.home_score, g.away_score);
+      return r; });
+    const s = rSum(rows.filter((r) => r.result));
+    const recS = (x) => `${x.w}-${x.l}${x.p ? '-' + x.p : ''}`;
+    const today = D.today, todays = rows.filter((r) => r.date === today);
+    const pick = (r) => r.market === 'total' ? `${r.side === 'over' ? 'Over' : 'Under'} ${r.line}` : `${nm(r.side === 'home' ? r.home_id : r.away_id, r.side === 'home' ? r.home : r.away)} ${r.market === 'ml' ? am(r.odds) : line(r.line)}`;
+    const status = (r) => r.result ? resChip(r)
+      : r.state === 'in' ? `<span class="lvt">${esc(r.detail || 'Live')}</span>`
+      : `<span class="mut">${r.start ? timeOf(r.start) : 'Pending'}</span>`;
+    const score = (r) => (r.away_score != null && (r.result || r.state === 'in') ? `${r.away_score}-${r.home_score}` : '–');
+    const days = [...new Set(rows.map((r) => r.date))].sort().reverse();
+    const list = !rows.length ? '<div class="empty">No Twitter plays yet. They show up here as they get posted.</div>' :
+      `<table class="led tw"><thead><tr><th class="l">Play</th><th class="l">Game</th><th>Price</th><th>Model</th><th>Score</th><th>Result</th><th></th></tr></thead><tbody>
+      ${days.map((d) => { const x = rows.filter((r) => r.date === d), t = rSum(x.filter((r) => r.result));
+        return `<tr class="dayh"><td class="l" colspan="7"><div class="dayr"><b>${dayOf(d, true)}</b><span>${t.n ? recS(t) : ''}</span></div></td></tr>` +
+          x.map((r) => `<tr><td class="l"><div class="team"><b>${pick(r)}</b></div><div class="twg">${nm(r.away_id, r.away)} at ${nm(r.home_id, r.home)} · ${r.odds != null ? am(r.odds) : '–'}</div>${r.note ? `<div class="twn">${esc(r.note)}</div>` : ''}</td>
+            <td class="l"><div class="team mut">${logo(r.away_id, 'sm')}${logo(r.home_id, 'sm')}<span>${nm(r.away_id, r.away)} at ${nm(r.home_id, r.home)}</span></div></td>
+            <td>${r.market === 'ml' ? am(r.odds) : r.odds != null ? am(r.odds) : '–'}</td><td>${r.model_grade ? badge(r.model_grade, 1) : '<span class="mut">–</span>'}</td>
+            <td>${score(r)}</td><td>${status(r)}</td><td class="end"><a class="vw" href="#game/${r.event_id}">View</a></td></tr>`).join(''); }).join('')}
+      </tbody></table>`;
+    app.innerHTML = `
+      <section class="hero"><div><div class="eyebrow">Hand-picked</div><h1>Twitter Plays</h1><div class="meta">The plays posted on Twitter · tracked separately from the model's record</div></div>
+        <div class="kpis"><div><span>Record</span><b>${s.n ? recS(s) : '–'}</b></div><div><span>Win %</span><b>${s.wp != null ? f1(s.wp) + '%' : '–'}</b></div><div><span>Today</span><b>${todays.length}</b></div></div></section>
+      <div class="board">${list}</div>`;
+  }
+
   // ================================================================ search modal
   const modal = document.getElementById('sm'), sq = document.getElementById('sq'), sr = document.getElementById('sr');
   let hits = [], sel = 0;
@@ -1067,6 +1101,7 @@
     const gm = document.getElementById('gm');
     if (basePage === 'board') { const y = window.scrollY; viewBoard(); window.scrollTo(0, y); }
     else if (basePage === 'results') { const y = window.scrollY; viewResults(); window.scrollTo(0, y); }
+    else if (basePage === 'twitter') { const y = window.scrollY; viewTwitter(); window.scrollTo(0, y); }
     else if (basePage === 'profile' && !app.contains(document.activeElement)) { const y = window.scrollY; viewProfile(); window.scrollTo(0, y); }
     if (!gm.hidden && page === 'game') { const s = gm.scrollTop; viewGame(arg); gm.scrollTop = s; }
   }
@@ -1103,6 +1138,7 @@
     window.scrollTo(0, 0);
     if (p === 'ratings') viewRatings(page === 'ff' ? (arg === 'def' ? 'def' : 'off') : arg);
     else if (p === 'results') viewResults();
+    else if (p === 'twitter') viewTwitter();
     else if (p === 'profile') { viewProfile(); settleBets(); }
     else viewBoard();
     document.getElementById('meBtn')?.classList.toggle('on', p === 'profile');
