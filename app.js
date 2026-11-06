@@ -843,7 +843,9 @@
     const js = GC.id === g.event_id ? GC.data : null;
     if (!js) return `<div class="empty">${GC.err ? "Couldn't reach ESPN for play-by-play. It'll retry in a few seconds." : 'Loading plays…'}</div>`;
     const all = (js.plays || []).filter((p) => !/substitution/i.test((p.type || {}).text || ''));
-    if (!all.length) return `<div class="empty">Play-by-play starts at tip-off${g.start ? ' (' + timeOf(g.start) + ')' : ''}.</div>`;
+    if (!all.length) return isLive(g) || isFinal(g) || new Date(g.start) < new Date()
+      ? `<div class="empty">ESPN isn't sending play-by-play for this game, so there's no Gamecast for it. The score up top still updates when ESPN does.</div>`
+      : `<div class="empty">Play-by-play starts at tip-off${g.start ? ' (' + timeOf(g.start) + ')' : ''}.</div>`;
     const hid = String(g.home_id), C = castCols(g), AB = GC.ab || [abbrOf(g.away_id, g.away), abbrOf(g.home_id, g.home)];
     const per = (p) => (p.period || {}).number || 1;
     const plays = GC.half === 1 ? all.filter((p) => per(p) === 1) : GC.half === 2 ? all.filter((p) => per(p) >= 2) : all;
