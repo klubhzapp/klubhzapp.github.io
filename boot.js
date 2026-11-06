@@ -32,7 +32,8 @@
       document.getElementById('gout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
       return;
     }
-    window.CBB = JSON.parse(await data.text());
+    const txt = await data.text();
+    try { window.CBB = JSON.parse(txt); } catch (e) { window.CBB = JSON.parse(txt.replace(/([:\[,])\s*-?(?:NaN|Infinity)\b/g, '$1null')); }   // tolerate NaN from older boards
     document.body.classList.remove('gate');
     await load(q('app.js'));
     sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') location.replace(location.pathname); });
