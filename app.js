@@ -180,6 +180,7 @@
       <div class="slq">${[10, 25, 50, 100].map((v) => `<button data-q="${v}">$${v}</button>`).join('')}</div>
       <div class="slf"><div><span>Total stake</span><b>${money(totStake)}</b></div><div><span>Payout</span><b>${money(totPay)}</b></div></div>
       ${started.length ? `<div class="slw">${started.length === 1 ? 'One game has' : started.length + ' games have'} started. Remove ${started.length === 1 ? 'it' : 'them'} to place.</div>` : ''}
+      <div class="sldis"><b>Tracking only.</b> Klubhz doesn't take bets or move money. Place real bets with your own sportsbook.</div>
       <button class="slgo" id="slgo"${started.length ? ' disabled' : ''}>${par ? `Place parlay${stakeOf('p') ? ' · ' + money(stakeOf('p')) : ''}` : `Place ${n === 1 ? 'bet' : n + ' bets'}${totStake ? ' · ' + money(totStake) : ''}`}</button>
       <div class="slnote">Tracked on your profile. Stake is optional.</div>`;
     el.querySelector('#slmin').onclick = () => { SL.open = false; renderSlip(); };
