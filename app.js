@@ -10,6 +10,12 @@
   const sg = (v, d = 1) => (v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(+v).toFixed(d));
   const line = (v) => (v == null ? '–' : v === 0 ? 'PK' : (v > 0 ? '+' : '−') + Math.abs(v));
   const am = (v) => (v == null ? '–' : (v > 0 ? '+' : '−') + Math.abs(Math.round(v)));
+  // Game page uses no team logos or player photos: team-colored chips + sneakers instead.
+  const tcol = (id) => { const c = T.get(id)?.color; if (c && /^#?[0-9a-f]{6}$/i.test(c)) return '#' + String(c).replace('#', '');
+    let h = 0; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) % 360; return `hsl(${h} 55% 38%)`; };
+  const tink = (c) => { const h = String(c).replace('#', ''); if (h.length !== 6) return '#fff'; const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255); return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.6 ? '#111' : '#fff'; };
+  const chip = (id, cls = '') => { const c = tcol(id); return `<span class="logo tchip ${cls}" style="background:${c};color:${tink(c)}">${abbrOf(id, '').slice(0, 3)}</span>`; };
+  const shoe = (c) => `<svg class="shoe" viewBox="0 0 64 40" aria-hidden="true"><path d="M5 29c0-6 3-10 9-11l11-2c4-6 8-10 14-10h3c2 7 7 11 14 13 4 1 6 4 6 8v2z" fill="${c}"/><path d="M40 6h3c1 4 3 7 6 9l-6 2c-2-3-3-7-3-11z" fill="#000" opacity=".18"/><path d="M27 15l4 2.5M30.5 12l4 2.5M34 9.5l4 2.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="54" cy="21" r="2.2" fill="#fff" opacity=".85"/><rect x="3" y="28.5" width="60" height="7.5" rx="3.75" fill="#fff" stroke="#cfd4da"/><path d="M8 32.3h50" stroke="#cfd4da" stroke-width="1.2" stroke-dasharray="3 2.5"/></svg>`;
   const logo = (id, cls = '') => `<img class="logo ${cls}" loading="lazy" src="https://a.espncdn.com/i/teamlogos/ncaa/500/${id}.png" alt="" onerror="this.style.visibility='hidden'">`;
   const nm = (id, fallback) => esc(T.get(id)?.team ?? fallback ?? '');
   const rkSpan = (r) => (r == null ? '' : `<span class="r${r <= 25 ? ' top' : ''}">${r}</span>`);
@@ -440,7 +446,7 @@
     const lw = live && GC.id === id && GC.data ? ((GC.data.winprobability || []).slice(-1)[0] || {}).homeWinPercentage : null;  // live ESPN number during games
     const ph = lw != null ? lw : g.sim_home_win, pa = 1 - ph;
     const an = nm(g.away_id, g.away), hn = nm(g.home_id, g.home), aa = abbrOf(g.away_id, g.away), ha = abbrOf(g.home_id, g.home);
-    const team = (id, t, name, right) => `<a class="gct${right ? ' rt' : ''}" href="#team/${id}">${logo(id, 'xl')}<span><b>${name}</b><small>${t.rank ? '#' + t.rank + ' · ' : ''}${t.w != null && t.w + t.l ? t.w + '-' + t.l + ' · ' : ''}${esc(t.conf ?? '')}</small></span></a>`;
+    const team = (id, t, name, right) => `<a class="gct${right ? ' rt' : ''}" href="#team/${id}">${chip(id, 'xl')}<span><b>${name}</b><small>${t.rank ? '#' + t.rank + ' · ' : ''}${t.w != null && t.w + t.l ? t.w + '-' + t.l + ' · ' : ''}${esc(t.conf ?? '')}</small></span></a>`;
     const score = (v, p, win) => `<div class="gcs${win ? '' : ' lo'}">${v}<small>${fin ? 'proj ' + Math.round(p) : live ? '' : 'proj'}</small></div>`;
     const awayWin = fin || live ? g.away_score > g.home_score : g.proj_away > g.proj_home;
     const center = fin ? '<b>Final</b>' : live ? `<b class="live">${esc(g.detail || 'Live')}</b>` : `<b>${timeOf(g.start)}</b>`;
@@ -483,9 +489,9 @@
     // ---- Form tab: last 5 for each team, side by side
     const form = (tid) => {
       const lg = (D.logs[tid] || []).slice(-5).reverse();
-      return lg.length ? lg.map((x) => `<div class="fr"><span class="fd">${isoDay(x.date).replace(/^\w+,?\s*/, '')}</span><span class="fo">${logo(x.opp, 'sm')}${x.loc === 'A' ? '@ ' : x.loc === 'N' ? 'vs ' : ''}${nm(x.opp, 'Non-D1')}</span><span class="fs"><span class="${x.res}">${x.res}</span> ${x.pts}-${x.opts}</span></div>`).join('') : '<div class="fr none">No games yet this season</div>';
+      return lg.length ? lg.map((x) => `<div class="fr"><span class="fd">${isoDay(x.date).replace(/^\w+,?\s*/, '')}</span><span class="fo">${chip(x.opp, 'sm')}${x.loc === 'A' ? '@ ' : x.loc === 'N' ? 'vs ' : ''}${nm(x.opp, 'Non-D1')}</span><span class="fs"><span class="${x.res}">${x.res}</span> ${x.pts}-${x.opts}</span></div>`).join('') : '<div class="fr none">No games yet this season</div>';
     };
-    const formTab = `<div class="form2"><div><div class="fh">${logo(g.away_id, 'sm')}${an}</div>${form(g.away_id)}</div><div><div class="fh">${logo(g.home_id, 'sm')}${hn}</div>${form(g.home_id)}</div></div>`;
+    const formTab = `<div class="form2"><div><div class="fh">${chip(g.away_id, 'sm')}${an}</div>${form(g.away_id)}</div><div><div class="fh">${chip(g.home_id, 'sm')}${hn}</div>${form(g.home_id)}</div></div>`;
 
     const keepK = id + '|' + GT.tab, same = body.dataset.k === keepK;
     const ct0 = body.querySelector('#ct'), hadFocus = ct0 && document.activeElement === ct0, sel = ct0 ? [ct0.selectionStart, ct0.selectionEnd] : null;
@@ -610,7 +616,7 @@
   function betCard(b, g) {
     const who = b.tailed ? 'Tailed' : 'Model play', odds = b.odds != null ? am(b.odds) : '', cf = b.conf != null ? pc(b.conf) + '% conf' : '';
     return `<div class="bvA"><div class="bvh"><span>${who}</span>${badge(b.grade, 1)}</div><div class="bp"><b>${txt(b.pick)}</b><em>${odds}</em></div>
-      <div class="bf"><span class="lgs"><span>${logo(g.away_id, 'sm')}</span><span>${logo(g.home_id, 'sm')}</span></span><span>${nm(g.away_id, g.away)} at ${nm(g.home_id, g.home)}</span><i>${cf}</i></div></div>`;
+      <div class="bf"><span class="lgs"><span>${chip(g.away_id, 'sm')}</span><span>${chip(g.home_id, 'sm')}</span></span><span>${nm(g.away_id, g.away)} at ${nm(g.home_id, g.home)}</span><i>${cf}</i></div></div>`;
   }
   function chatTab(g, aa, ha) {
     const id = g.event_id, list = CH.list[id];
@@ -714,7 +720,7 @@
       const rows = (list) => list.map((a) => `<tr><td class="l"><span class="bn">${esc(a.athlete.shortName || a.athlete.displayName)}</span><small>${esc((a.athlete.position || {}).abbreviation || '')}${a.athlete.jersey ? ' · #' + esc(a.athlete.jersey) : ''}</small></td>${a.didNotPlay || !(a.stats || []).length ? `<td colspan="${want.length}" class="l mut">${a.didNotPlay ? 'Did not play' : '–'}</td>` : cells(a.stats)}</tr>`).join('');
       const played = ath.filter((a) => !a.didNotPlay), dnp = ath.filter((a) => a.didNotPlay);
       const starters = played.filter((a) => a.starter), bench = played.filter((a) => !a.starter);
-      return `<div class="bxt"><div class="bxh">${logo(+tm.team.id, 'sm')}<b>${esc(tm.team.displayName || tm.team.shortDisplayName || '')}</b></div>
+      return `<div class="bxt"><div class="bxh">${chip(+tm.team.id, 'sm')}<b>${esc(tm.team.displayName || tm.team.shortDisplayName || '')}</b></div>
         <div class="bxs"><table><thead><tr><th class="l">Starters</th>${want.map((w) => `<th>${w}</th>`).join('')}</tr></thead><tbody>${rows(starters)}</tbody>
         <thead><tr><th class="l">Bench</th>${want.map((w) => `<th>${w}</th>`).join('')}</tr></thead><tbody>${rows(bench)}${dnp.length ? `<tr class="dnp"><td class="l" colspan="${want.length + 1}">Did not play: ${dnp.map((a) => esc(a.athlete.shortName || a.athlete.displayName)).join(', ')}</td></tr>` : ''}</tbody>
         ${st.totals ? `<tfoot><tr><td class="l"><b>Team</b></td>${cells(st.totals)}</tr></tfoot>` : ''}</table></div></div>`;
@@ -737,7 +743,7 @@
         const show = (x, pct) => `${esc(x ?? '–')}${pct != null ? `<small>${esc(pct)}%</small>` : ''}`;
         return `<div class="tsr"><b class="${better > 0 ? 'on' : ''}">${show(av, pk ? v(tAway, pk) : null)}</b><div class="tsm"><span>${lab}</span><div class="tsb"><i style="width:${(aw * 100).toFixed(1)}%;background:${C.a}"></i><i style="width:${((1 - aw) * 100).toFixed(1)}%;background:${C.h}"></i></div></div><b class="${better < 0 ? 'on' : ''}">${show(hv, pk ? v(tHome, pk) : null)}</b></div>`;
       }).join('');
-      cmp = `<div class="tsx"><div class="tsh">${logo(g.away_id, 'sm')}<span>${ab(g.away_id, g.away)}</span><em>Team stats</em><span>${ab(g.home_id, g.home)}</span>${logo(g.home_id, 'sm')}</div>${rowsH}</div>`;
+      cmp = `<div class="tsx"><div class="tsh">${chip(g.away_id, 'sm')}<span>${ab(g.away_id, g.away)}</span><em>Team stats</em><span>${ab(g.home_id, g.home)}</span>${chip(g.home_id, 'sm')}</div>${rowsH}</div>`;
     }
     const pickT = (side) => teams.find((x) => String(x.team.id) === String(side === 'home' ? g.home_id : g.away_id));
     const view = which === 'stats' ? (cmp || '<div class="empty">Team stats show up once the game starts.</div>') : pickT(which === 'boxH' ? 'home' : 'away') ? one(pickT(which === 'boxH' ? 'home' : 'away')) : '<div class="empty">No box score for this team yet.</div>';
@@ -830,10 +836,10 @@
     const ago = c.p.wallclock ? Math.round((Date.now() - new Date(c.p.wallclock)) / 60000) : null;
     const agoT = ago != null && ago >= 0 && ago < 180 ? ` · ${ago < 1 ? 'now' : ago < 60 ? ago + 'm' : Math.floor(ago / 60) + 'h'}` : '';
     const fav = c.wp == null ? null : c.wp >= 0.5 ? [g.home_id, c.wp] : [g.away_id, 1 - c.wp], fin0 = null;
-    const sw = fav ? `<span class="pwp">${logo(fav[0], 'sm')}<b>${isFinal(g) && c === fin0 ? Math.round(100 * fav[1]) : Math.min(99, Math.round(100 * fav[1]))}%</b> to win</span>` : '';
+    const sw = fav ? `<span class="pwp">${chip(fav[0], 'sm')}<b>${isFinal(g) && c === fin0 ? Math.round(100 * fav[1]) : Math.min(99, Math.round(100 * fav[1]))}%</b> to win</span>` : '';
     const right = `<div class="psc"><span class="${c.team === String(g.away_id) ? 'on' : ''}">${c.score[0]}</span><i>-</i><span class="${c.team === String(g.home_id) ? 'on' : ''}">${c.score[1]}</span></div>`;
     return `<div class="pc ${c.kind}${c.made ? ' mk' : ''}">
-      <div class="pav"><span class="ini">${esc(ini)}</span>${a.head ? `<img src="${a.head}" alt="" onerror="this.remove()">` : ''}<span class="tlg">${logo(+c.team, 'sm')}</span><i class="em">${c.emoji || ''}</i></div>
+      <div class="pav shoeav" style="--tc:${c.team === String(g.home_id) ? C.h : C.a}">${shoe(c.team === String(g.home_id) ? C.h : C.a)}<i class="em">${c.emoji || ''}</i></div>
       <div class="pbd"><div class="phd"><span>${perL} <em class="${hot ? 'hot' : ''}">${esc(clk)}</em>${agoT}</span></div>
         <div class="ptl">${esc(c.title)}</div>
         ${c.lines.map(([n, v], i) => `<div class="pln${i ? ' sub' : ''}">${esc(n)}${v ? ` <span>· ${esc(v)}</span>` : ''}</div>`).join('')}
@@ -879,7 +885,6 @@
     const lineC = '#ffffff';
     const school = esc((hT.location || T.get(g.home_id)?.team || g.home || '').toUpperCase()), mascot = esc((hT.name || '').toUpperCase());
     const venue = esc((((js.gameInfo || {}).venue || {}).fullName || '').toUpperCase());
-    const hLogo = `https://a.espncdn.com/i/teamlogos/ncaa/500/${g.home_id}.png`;
     const fs = (s) => Math.max(18, Math.min(34, Math.floor(470 / Math.max(6, s.length * 0.62))));
     const court = `<svg class="court" viewBox="-64 -44 1068 588" style="--lc:${lineC};--ap:${apron}"><defs>
         <linearGradient id="wd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecd8b1"/><stop offset="1" stop-color="#dec49a"/></linearGradient>
@@ -894,11 +899,11 @@
       <text x="972" y="250" class="apr" fill="${txt}" font-size="${fs(mascot || school)}" transform="rotate(90 972 250)">${mascot || school}</text>
       ${venue ? `<text x="470" y="-17" class="apv" fill="${txt}">${venue}</text>` : ''}
       <g class="ln">${end(false)}${end(true)}<line x1="470" y1="0" x2="470" y2="500"/><circle cx="470" cy="250" r="60"/><rect x="0" y="0" width="940" height="500"/></g>
-      <image href="${hLogo}" x="385" y="165" width="170" height="170" opacity=".95"/>${dots}${lastRing}</svg>`;
+      <circle cx="470" cy="250" r="58" fill="${apron}" opacity=".92"/><text x="470" y="250" class="cab" fill="${txt}" font-size="${AB[1].length > 3 ? 40 : 50}">${AB[1]}</text>${dots}${lastRing}</svg>`;
     const half = (k, l) => `<button data-v="${k}" class="${(GC.half || 'all') === k ? 'on' : ''}">${l}</button>`;
-    const head = `<div class="chd"><div class="cht">${logo(g.away_id, 'sm')}<b style="color:${C.a}">${AB[0]}</b><span>${line3(false)}</span></div>
+    const head = `<div class="chd"><div class="cht">${chip(g.away_id, 'sm')}<b style="color:${C.a}">${AB[0]}</b><span>${line3(false)}</span></div>
       <div class="seg sm" id="gch">${half('all', 'All')}${half(1, '1st half')}${half(2, '2nd half')}</div>
-      <div class="cht rt"><span>${line3(true)}</span><b style="color:${C.h}">${AB[1]}</b>${logo(g.home_id, 'sm')}</div></div>`;
+      <div class="cht rt"><span>${line3(true)}</span><b style="color:${C.h}">${AB[1]}</b>${chip(g.home_id, 'sm')}</div></div>`;
     const key = `<div class="ckey"><span><i style="background:${C.a}"></i>${AB[0]}</span><span><i style="background:${C.h}"></i>${AB[1]}</span><span><i class="mk"></i>Made</span><span><i class="ms"></i>Missed</span><span><i class="lt"></i>Latest shot</span></div>`;
     // win probability: home above the 50% line, away below
     const W0 = js.winprobability || [], idIdx = new Map(all.map((p, i) => [String(p.id), i]));
@@ -945,7 +950,7 @@
       <path d="${d}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
       ${pts.slice(1).map((p, i) => `<circle cx="${X(i + 1)}" cy="${Y(p.cum)}" r="3.2" fill="#fff" stroke="${col}" stroke-width="2"><title>${dayOf(p.date)}: ${sg(p.units, 2)}u (total ${sg(p.cum, 2)}u)</title></circle>`).join('')}${labels}</svg>`;
   }
-  const RS = { g: 'all', mk: 'all' };
+  const RS = { g: 'all', mk: 'all', d: 'all' };
   const GORD = ['A', 'B+', 'B', 'C+', 'C', 'C-'];
   function rSum(rows) {
     const w = rows.filter((r) => r.result === 'W').length, l = rows.filter((r) => r.result === 'L').length, pu = rows.filter((r) => r.result === 'P').length;
@@ -964,7 +969,10 @@
     const recS = (s) => `${s.w}-${s.l}${s.p ? '-' + s.p : ''}`;
     const uCls = (u) => (u > 0 ? 'pos' : u < 0 ? 'neg' : '');
     const pick = (r) => r.market === 'total' ? `${r.side === 'over' ? 'Over' : 'Under'} ${r.line}` : `${nm(r.side === 'home' ? r.home_id : r.away_id, r.side === 'home' ? r.home : r.away)} ${r.market === 'ml' ? am(r.odds) : line(r.line)}`;
-    const rows = all.filter((r) => (RS.g === 'all' || (RS.g === 'potd' ? r.potd : (r.grade || '')[0] === RS.g)) && (RS.mk === 'all' || r.market === RS.mk));
+    const since = (n) => { const b = D.today || String(D.generated || '').slice(0, 10).replace(/-/g, ''); const x = new Date(+b.slice(0, 4), +b.slice(4, 6) - 1, +b.slice(6, 8) - n);
+      return `${x.getFullYear()}${String(x.getMonth() + 1).padStart(2, '0')}${String(x.getDate()).padStart(2, '0')}`; };
+    const from = RS.d === 'all' ? '' : since(+RS.d);
+    const rows = all.filter((r) => (RS.g === 'all' || (RS.g === 'potd' ? r.potd : (r.grade || '')[0] === RS.g)) && (RS.mk === 'all' || r.market === RS.mk) && r.date >= from);
     const s = rSum(rows);
     const days = [...new Set(rows.map((r) => r.date))].sort().reverse();
     const first = all.length ? all.map((r) => r.date).sort()[0] : null;
@@ -978,9 +986,10 @@
             <td>${am(r.odds)}</td><td>${pc(r.conf)}%</td><td>${r.away_score}-${r.home_score}</td><td>${resChip(r)}</td><td class="end"><a class="vw" href="#game/${r.event_id}">View</a></td></tr>`).join(''); }).join('')}
       </tbody></table>`;
     app.innerHTML = `
-      <section class="hero"><div><div class="eyebrow">Tracking</div><h1>Results</h1><div class="meta">A, B+ and B plays · since ${dayOf(first || D.track_start || '20261104')}</div></div>
+      <section class="hero"><div><div class="eyebrow">Tracking</div><h1>Results</h1><div class="meta">A, B+ and B plays · ${RS.d === 'all' ? 'since ' + dayOf(first || D.track_start || '20261104') : 'last ' + RS.d + ' days'}</div></div>
         <div class="kpis"><div><span>Record</span><b>${s.n ? recS(s) : '–'}</b></div><div><span>Win %</span><b>${s.wp != null ? f1(s.wp) + '%' : '–'}</b></div><div><span title="Closing line value: average points the line moved toward our bet after we'd have placed it. Positive = beating the market">CLV</span><b class="${uCls(s.clv)}">${s.clv != null ? sg(s.clv, 1) : '–'}</b></div></div></section>
-      <div class="board"><div class="bar">${seg('rg', RS.g, [['all', 'All'], ['potd', 'POTD'], ['A', 'A'], ['B', 'B']])}${seg('rm', RS.mk, [['all', 'All'], ['spread', 'Spread'], ['total', 'Total'], ['ml', 'Moneyline']])}</div>${list}</div>`;
+      <div class="board"><div class="bar">${seg('rd', RS.d, [['all', 'Season'], ['7', 'Last 7d'], ['14', 'Last 14d']])}${seg('rg', RS.g, [['all', 'All'], ['potd', 'POTD'], ['A', 'A'], ['B', 'B']])}${seg('rm', RS.mk, [['all', 'All'], ['spread', 'Spread'], ['total', 'Total'], ['ml', 'Moneyline']])}</div>${list}</div>`;
+    app.querySelectorAll('#rd button').forEach((b) => (b.onclick = () => { RS.d = b.dataset.v; viewResults(); }));
     app.querySelectorAll('#rg button').forEach((b) => (b.onclick = () => { RS.g = b.dataset.v; viewResults(); }));
     app.querySelectorAll('#rm button').forEach((b) => (b.onclick = () => { RS.mk = b.dataset.v; viewResults(); }));
   }
