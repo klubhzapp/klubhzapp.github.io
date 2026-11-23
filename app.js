@@ -10,13 +10,12 @@
   const sg = (v, d = 1) => (v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(+v).toFixed(d));
   const line = (v) => (v == null ? '–' : v === 0 ? 'PK' : (v > 0 ? '+' : '−') + Math.abs(v));
   const am = (v) => (v == null ? '–' : (v > 0 ? '+' : '−') + Math.abs(Math.round(v)));
-  // Game page uses no team logos or player photos: team-colored chips + sneakers instead.
+  // No team logos or player photos anywhere: team-colored abbreviation chips instead.
   const tcol = (id) => { const c = T.get(id)?.color; if (c && /^#?[0-9a-f]{6}$/i.test(c)) return '#' + String(c).replace('#', '');
     let h = 0; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) % 360; return `hsl(${h} 55% 38%)`; };
   const tink = (c) => { const h = String(c).replace('#', ''); if (h.length !== 6) return '#fff'; const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255); return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.6 ? '#111' : '#fff'; };
   const chip = (id, cls = '') => { const c = tcol(id); return `<span class="logo tchip ${cls}" style="background:${c};color:${tink(c)}">${abbrOf(id, '').slice(0, 3)}</span>`; };
-  const shoe = (c) => `<svg class="shoe" viewBox="0 0 64 40" aria-hidden="true"><path d="M5 29c0-6 3-10 9-11l11-2c4-6 8-10 14-10h3c2 7 7 11 14 13 4 1 6 4 6 8v2z" fill="${c}"/><path d="M40 6h3c1 4 3 7 6 9l-6 2c-2-3-3-7-3-11z" fill="#000" opacity=".18"/><path d="M27 15l4 2.5M30.5 12l4 2.5M34 9.5l4 2.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="54" cy="21" r="2.2" fill="#fff" opacity=".85"/><rect x="3" y="28.5" width="60" height="7.5" rx="3.75" fill="#fff" stroke="#cfd4da"/><path d="M8 32.3h50" stroke="#cfd4da" stroke-width="1.2" stroke-dasharray="3 2.5"/></svg>`;
-  const logo = (id, cls = '') => `<img class="logo ${cls}" loading="lazy" src="https://a.espncdn.com/i/teamlogos/ncaa/500/${id}.png" alt="" onerror="this.style.visibility='hidden'">`;
+  const logo = (id, cls = '') => chip(id, cls);   // no team logos anywhere on the site
   const nm = (id, fallback) => esc(T.get(id)?.team ?? fallback ?? '');
   const rkSpan = (r) => (r == null ? '' : `<span class="r${r <= 25 ? ' top' : ''}">${r}</span>`);
   const timeOf = (iso) => (iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '');
@@ -839,7 +838,7 @@
     const sw = fav ? `<span class="pwp">${chip(fav[0], 'sm')}<b>${isFinal(g) && c === fin0 ? Math.round(100 * fav[1]) : Math.min(99, Math.round(100 * fav[1]))}%</b> to win</span>` : '';
     const right = `<div class="psc"><span class="${c.team === String(g.away_id) ? 'on' : ''}">${c.score[0]}</span><i>-</i><span class="${c.team === String(g.home_id) ? 'on' : ''}">${c.score[1]}</span></div>`;
     return `<div class="pc ${c.kind}${c.made ? ' mk' : ''}">
-      <div class="pav shoeav" style="--tc:${c.team === String(g.home_id) ? C.h : C.a}">${shoe(c.team === String(g.home_id) ? C.h : C.a)}<i class="em">${c.emoji || ''}</i></div>
+      <div class="pav chipav">${chip(+c.team, 'pv')}<i class="em">${c.emoji || ''}</i></div>
       <div class="pbd"><div class="phd"><span>${perL} <em class="${hot ? 'hot' : ''}">${esc(clk)}</em>${agoT}</span></div>
         <div class="ptl">${esc(c.title)}</div>
         ${c.lines.map(([n, v], i) => `<div class="pln${i ? ' sub' : ''}">${esc(n)}${v ? ` <span>· ${esc(v)}</span>` : ''}</div>`).join('')}
