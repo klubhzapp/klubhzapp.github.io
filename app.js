@@ -19,7 +19,7 @@
   const nm = (id, fallback) => esc(T.get(id)?.team ?? fallback ?? '');
   const rkSpan = (r) => (r == null ? '' : `<span class="r${r <= 25 ? ' top' : ''}">${r}</span>`);
   const timeOf = (iso) => (iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '');
-  const dayOf = (ds, long) => { const d = new Date(+ds.slice(0, 4), +ds.slice(4, 6) - 1, +ds.slice(6, 8)); return d.toLocaleDateString([], long ? { weekday: 'long', month: 'short', day: 'numeric' } : { weekday: 'short', month: 'short', day: 'numeric' }); };
+  const dayOf = (ds, long) => { if (!ds) return ''; const d = new Date(+ds.slice(0, 4), +ds.slice(4, 6) - 1, +ds.slice(6, 8)); return d.toLocaleDateString([], long ? { weekday: 'long', month: 'short', day: 'numeric' } : { weekday: 'short', month: 'short', day: 'numeric' }); };
   const isoDay = (s) => dayOf(String(s).replace(/-/g, ''));
 
   function sortTable(tbl, rows, render, key, dir) {
@@ -259,7 +259,7 @@
   }
 
   function viewBoard() {
-    const dates = [...new Set(D.games.map((g) => g.date))].sort();
+    const dates = [...new Set(D.games.map((g) => g.date).filter(Boolean))].sort();
     if (!dates.includes(S.date)) S.date = dates.includes(D.today) ? D.today : dates[0];
     let gs = D.games.filter((g) => g.date === S.date);
     const nPlays = gs.reduce((a, g) => a + plays(g).length, 0);
@@ -1077,7 +1077,7 @@
   async function pullLive() {
     clearTimeout(LV.timer);
     const byId = new Map(D.games.map((g) => [String(g.event_id), g]));
-    const dates = [...new Set(D.games.map((g) => g.date))];
+    const dates = [...new Set(D.games.map((g) => g.date).filter(Boolean))];
     let changed = false, ok = false;
     await Promise.all(dates.map(async (ds) => {
       try {
